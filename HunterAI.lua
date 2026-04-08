@@ -9,7 +9,7 @@ local DirectorAI = require(script.Parent.DirectorAI)
 local Hunter = setmetatable({}, BaseAI)
 Hunter.__index = Hunter
 
--- 🧠 CONSTRUCTOR
+-- CONSTRUCTOR
 function Hunter.new(model)
     local self = BaseAI.new(model)
     setmetatable(self, Hunter)
@@ -26,7 +26,7 @@ function Hunter.new(model)
     return self
 end
 
--- 👁️ VISION (FOV + LOS)
+-- VISION (FOV + LOS)
 function Hunter:CanSeePlayer(player)
     if not player.Character then return false end
     if player.Character:GetAttribute("Hidden") then return false end
@@ -58,7 +58,7 @@ function Hunter:CanSeePlayer(player)
     return result and result.Instance:IsDescendantOf(player.Character)
 end
 
--- 🔊 HEARING
+-- HEARING
 function Hunter:HearNoise(position, intensity)
     local dist = (self.Root.Position - position).Magnitude
 
@@ -67,7 +67,7 @@ function Hunter:HearNoise(position, intensity)
     end
 end
 
--- 🎯 FIND TARGET
+-- FIND TARGET
 function Hunter:FindTarget()
     for _, player in ipairs(Players:GetPlayers()) do
         if self:CanSeePlayer(player) then
@@ -82,7 +82,7 @@ function Hunter:FindTarget()
     return false
 end
 
--- 🏃 CHASE
+-- CHASE
 function Hunter:Chase()
     if not self.TargetPlayer then return false end
     if not self.TargetPlayer.Character then return false end
@@ -94,7 +94,7 @@ function Hunter:Chase()
     return true
 end
 
--- 🔍 SEARCH LAST KNOWN
+-- SEARCH LAST KNOWN
 function Hunter:Search()
     if not MemorySystem:IsValid(self.Memory) then return false end
 
@@ -111,7 +111,7 @@ function Hunter:Search()
     return true
 end
 
--- 🔎 INVESTIGATE SOUND
+-- INVESTIGATE SOUND
 function Hunter:Investigate()
     if not self.TargetPosition then return false end
 
@@ -121,7 +121,7 @@ function Hunter:Investigate()
     return true
 end
 
--- 🚶 PATROL
+-- PATROL
 function Hunter:Patrol()
     local randomPos = self.Root.Position + Vector3.new(
         math.random(-30,30),
@@ -133,7 +133,7 @@ function Hunter:Patrol()
     return true
 end
 
--- 🌳 BUILD BEHAVIOR TREE
+-- BUILD BEHAVIOR TREE
 function Hunter:BuildTree()
     return BT.Selector({
         BT.Sequence({
@@ -146,7 +146,7 @@ function Hunter:BuildTree()
     })
 end
 
--- ▶️ MAIN LOOP
+-- MAIN LOOP
 function Hunter:Run()
     local Tree = self:BuildTree()
 

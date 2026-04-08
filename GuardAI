@@ -20,7 +20,7 @@ function Guard.new(model)
     return self
 end
 
--- 👁️ Simple vision
+-- Simple vision
 function Guard:CanSeePlayer(player)
     if not player.Character then return false end
 
@@ -31,7 +31,7 @@ function Guard:CanSeePlayer(player)
     return dist < 40
 end
 
--- 🔊 Hear noise
+-- Hear noise
 function Guard:HearNoise(position, intensity)
     local dist = (self.Root.Position - position).Magnitude
 
@@ -41,7 +41,7 @@ function Guard:HearNoise(position, intensity)
     end
 end
 
--- 🚶 Patrol
+-- Patrol
 function Guard:Patrol()
     local point = self.PatrolPoints[self.CurrentPoint]
     if not point then return end
@@ -51,7 +51,7 @@ function Guard:Patrol()
     self.CurrentPoint = self.CurrentPoint % #self.PatrolPoints + 1
 end
 
--- 🔍 Investigate
+-- Investigate
 function Guard:Investigate()
     if not self.TargetPosition then return false end
 
@@ -60,12 +60,12 @@ function Guard:Investigate()
     return true
 end
 
--- 👹 Chase
+-- Chase
 function Guard:Chase(player)
     self:MoveTo(player.Character.HumanoidRootPart.Position)
 end
 
--- 🔁 Main loop
+-- Main loop
 function Guard:Run()
     while true do
         local sawPlayer = false

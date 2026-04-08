@@ -1,4 +1,7 @@
 -- DirectorAI.lua
+--------------------
+-- Fully Obversable AI that and occasionally gives hint
+--------------------
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

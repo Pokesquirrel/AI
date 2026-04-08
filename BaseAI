@@ -1,0 +1,28 @@
+local PathfindingService = game:GetService("PathfindingService")
+
+local BaseAI = {}
+BaseAI.__index = BaseAI
+
+function BaseAI.new(model)
+    local self = setmetatable({}, BaseAI)
+
+    self.Model = model
+    self.Humanoid = model:WaitForChild("Humanoid")
+    self.Root = model:WaitForChild("HumanoidRootPart")
+
+    return self
+end
+
+function BaseAI:MoveTo(pos)
+    local path = PathfindingService:CreatePath()
+    path:ComputeAsync(self.Root.Position, pos)
+
+    if path.Status == Enum.PathStatus.Success then
+        for _, wp in ipairs(path:GetWaypoints()) do
+            self.Humanoid:MoveTo(wp.Position)
+            self.Humanoid.MoveToFinished:Wait()
+        end
+    end
+end
+
+return BaseAI

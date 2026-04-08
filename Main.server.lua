@@ -1,7 +1,8 @@
+local AIManager = require(script.AI.AIManager)
 local DirectorAI = require(script.AI.DirectorAI)
-local HunterAI = require(script.AI.HunterAI)
 
 DirectorAI:DecayStress()
+AIManager:Init()
 
 task.spawn(function()
     HunterAI:Run()

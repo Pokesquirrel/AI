@@ -1,0 +1,92 @@
+local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
+
+local BaseAI = require(script.Parent.BaseAI)
+local SoundSystem = require(script.Parent.SoundSystem)
+
+local Guard = setmetatable({}, BaseAI)
+Guard.__index = Guard
+
+function Guard.new(model)
+    local self = BaseAI.new(model)
+    setmetatable(self, Guard)
+
+    self.Type = "Guard"
+    self.PatrolPoints = CollectionService:GetTagged("GuardPath")
+    self.CurrentPoint = 1
+    self.Alerted = false
+    self.TargetPosition = nil
+
+    return self
+end
+
+-- 👁️ Simple vision
+function Guard:CanSeePlayer(player)
+    if not player.Character then return false end
+
+    local root = player.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+
+    local dist = (self.Root.Position - root.Position).Magnitude
+    return dist < 40
+end
+
+-- 🔊 Hear noise
+function Guard:HearNoise(position, intensity)
+    local dist = (self.Root.Position - position).Magnitude
+
+    if dist < intensity * 5 and SoundSystem:CanHear(self.Root.Position, position) then
+        self.Alerted = true
+        self.TargetPosition = position
+    end
+end
+
+-- 🚶 Patrol
+function Guard:Patrol()
+    local point = self.PatrolPoints[self.CurrentPoint]
+    if not point then return end
+
+    self:MoveTo(point.Position)
+
+    self.CurrentPoint = self.CurrentPoint % #self.PatrolPoints + 1
+end
+
+-- 🔍 Investigate
+function Guard:Investigate()
+    if not self.TargetPosition then return false end
+
+    self:MoveTo(self.TargetPosition)
+    self.Alerted = false
+    return true
+end
+
+-- 👹 Chase
+function Guard:Chase(player)
+    self:MoveTo(player.Character.HumanoidRootPart.Position)
+end
+
+-- 🔁 Main loop
+function Guard:Run()
+    while true do
+        local sawPlayer = false
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if self:CanSeePlayer(player) then
+                self:Chase(player)
+                sawPlayer = true
+            end
+        end
+
+        if not sawPlayer then
+            if self.Alerted then
+                self:Investigate()
+            else
+                self:Patrol()
+            end
+        end
+
+        task.wait(0.3)
+    end
+end
+
+return Guard

@@ -31,3 +31,8 @@ AIManager:Init()
 - **Realistic Senses**: Sight is calculated using field-of-view and raycasts. Hearing is calculated based on sound intensity and distance, accounting for wall obstructions.
 - **Dynamic Pacing**: The Director automatically scales NPC aggression based on how much "Stress" the player has accumulated.
 - **Scalable HUD**: UI components use aspect ratio constraints to maintain a premium look across different screen resolutions.
+
+## New Changes
+
+- **Moved/Renamed Folders**: Made to match Roblox's File Structure more
+- **Updated AI**: Updated AI to learn and adapt player through Heuristic Learning

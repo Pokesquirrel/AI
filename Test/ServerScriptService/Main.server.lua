@@ -7,6 +7,7 @@ Metrics:Start()
 Director:Init()
 AIManager:Init()
 
+--Game Loop
 game:GetService("RunService").Heartbeat:Connect(function(dt)
 	Threat:Update(dt)
 	Metrics:Tick(dt)

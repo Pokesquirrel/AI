@@ -1,37 +1,36 @@
 -- AIManager.lua
 -- Central manager for all AI instances
 
-local HeroAI = require(script.Parent.NPCs.HeroAI)
-local GuardAI = require(script.Parent.NPCs.GuardAI)
-local DroneAI = require(script.Parent.NPCs.DroneAI)
-local DaveNPC = require(script.Parent.NPCs.DaveNPC)
-local Director = require(script.Parent.DirectorAI)
+local HeroAI = require(script.NPCs.HeroAI)
+local GuardAI = require(script.NPCs.GuardAI)
+local DroneAI = require(script.NPCs.DroneAI)
+local DaveNPC = require(script.NPCs.DaveNPC)
 
 local AIManager = {}
 AIManager.Agents = {}
 
 function AIManager:Init()
-	Director:Init()
 	
 	-- Register existing NPCs in workspace tagged appropriately
 	-- Or find them by name for this example
 	for _, model in ipairs(workspace:GetChildren()) do
 		if model:IsA("Model") and model:FindFirstChild("Humanoid") then
-			local agent = nil
-			
+
+			local ai
+
 			if model.Name == "Hero" then
-				agent = HeroAI.new(model)
+				ai = HeroAI.new(model)
 			elseif model.Name == "Guard" then
-				agent = GuardAI.new(model)
+				ai = GuardAI.new(model)
 			elseif model.Name == "Drone" then
-				agent = DroneAI.new(model)
+				ai = DroneAI.new(model)
 			elseif model.Name == "Dave" then
-				agent = DaveNPC.new(model)
+				ai = DaveNPC.new(model)
 			end
-			
-			if agent then
-				table.insert(self.Agents, agent)
-				agent:Run()
+
+			if ai then
+				table.insert(self.Agents, ai)
+				ai:Run()
 			end
 		end
 	end

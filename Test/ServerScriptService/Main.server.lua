@@ -1,13 +1,22 @@
+require(game.ReplicatedStorage:WaitForChild("GameEventsSetup"))
+
 local AIManager = require(script.AI.AIManager)
 local Threat = require(script.AI.Systems.ThreatSystem)
 local Metrics = require(script.AI.Systems.Metrics)
 local Director = require(script.AI.DirectorAI)
+local AISync = require(game.ServerScriptService.Game.AISyncService)
+local Combat = require(game.ServerScriptService.Game.CombatService)
 
 Metrics:Start()
 Director:Init()
 AIManager:Init()
+AISync:Run()
+require(game.ServerScriptService.AI.Systems.MetricsBroadcaster)
+require(game.ServerScriptService.Game.NoiseService)
+task.spawn(function()
+	Combat:CheckAttacks()
+end)
 
---Game Loop
 game:GetService("RunService").Heartbeat:Connect(function(dt)
 	Threat:Update(dt)
 	Metrics:Tick(dt)

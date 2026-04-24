@@ -7,7 +7,8 @@ local Memory = require(game.ReplicatedStorage.Shared.MemorySystem)
 local Director = require(script.Parent.Parent.DirectorAI)
 local Threat = require(script.Parent.Parent.Systems.ThreatSystem)
 local Metrics = require(script.Parent.Parent.Systems.Metrics)
-
+local Tracker = require(game.ServerScriptService.AI.Systems.PlayerBehaviorTracker)
+local Players = game:GetService("Players")
 local HeroAI = setmetatable({}, BaseAI)
 HeroAI.__index = HeroAI
 
@@ -45,6 +46,24 @@ function HeroAI:Think()
 	end
 
 	self.Target = bestPlayer
+end
+
+function HeroAI:Patrol()
+	local player = Players:GetPlayers()[1]
+	local pref = Tracker:GetPreference(player)
+
+	local targetPos
+
+	if pref == "Vent" then
+		targetPos = Vector3.new(math.random(-20,20), 0, math.random(-20,20))
+	elseif pref == "Locker" then
+		targetPos = Vector3.new(math.random(-40,40), 0, math.random(-40,40))
+	else
+		targetPos = self.Root.Position + Vector3.new(math.random(-30,30),0,math.random(-30,30))
+	end
+
+	self:MoveTo(targetPos)
+	return BT.NodeStatus.Success
 end
 
 function HeroAI:Chase()

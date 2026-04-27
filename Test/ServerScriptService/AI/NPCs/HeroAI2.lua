@@ -21,19 +21,12 @@ function HeroAI.new(model)
 	self.State = "Patrol"
 	self.HuntTarget = nil
 
-	-- PATH DATA
 	self.CurrentPath = nil
 	self.PathIndex = 1
 	self.LastPathTime = 0
 	self.LastGoalPos = Vector3.new()
 
-	-- MOVEMENT SMOOTHING
 	self.MoveTarget = nil
-
-	-- RAYCAST PARAMS (filter out self)
-	self.RayParams = RaycastParams.new()
-	self.RayParams.FilterDescendantsInstances = {model}
-	self.RayParams.FilterType = Enum.RaycastFilterType.Exclude
 
 	return self
 end
@@ -69,7 +62,6 @@ function HeroAI:Think()
 
 	self.Target = bestPlayer
 
-	-- SWITCH TO HUNT IMMEDIATELY
 	if self.Target and self.Target.Character then
 		local seen = Sensory.CanSee(self.Model, self.Target.Character, 60)
 
@@ -111,75 +103,41 @@ function HeroAI:GetPath(goalPos)
 end
 
 -- =========================
--- PATH FOLLOW (WITH WALL AVOIDANCE)
+-- PATH FOLLOW (FIXED RAYCAST)
 -- =========================
 function HeroAI:FollowPath()
 	if not self.CurrentPath then return end
 
 	local target = self.CurrentPath[self.PathIndex]
-	if not target then
-		self.CurrentPath = nil
-		return
+	if not target then return end
+
+	local rayParams = RaycastParams.new()
+	rayParams.FilterDescendantsInstances = {self.Model}
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+	local origin = self.Root.Position
+	local direction = (target - origin)
+
+	local result = workspace:Raycast(origin, direction, rayParams)
+
+	-- ✅ FIX: only treat as wall if NOT the target player
+	if result then
+		if not (self.Target and self.Target.Character and result.Instance:IsDescendantOf(self.Target.Character)) then
+			self.PathIndex += 1
+			return
+		end
 	end
 
-	-- Apply wall avoidance to target position
-	local avoidVector = self:GetWallAvoidanceVector()
-	local adjustedTarget = target
+	self.MoveTarget = target
+	self:MoveTo(target)
 
-	if avoidVector.Magnitude > 0.1 then
-		adjustedTarget = target + avoidVector * 1.5
-	end
-
-	self.MoveTarget = adjustedTarget
-	self:MoveTo(adjustedTarget)
-
-	-- Advance to next waypoint when close enough
 	if (self.Root.Position - target).Magnitude < 3 then
 		self.PathIndex += 1
-		if self.PathIndex > #self.CurrentPath then
-			self.CurrentPath = nil
-		end
 	end
 end
 
 -- =========================
--- WALL AVOIDANCE
--- =========================
-function HeroAI:GetWallAvoidanceVector()
-	local avoidVector = Vector3.new(0, 0, 0)
-	local rayDistance = 4
-
-	-- Cast rays in multiple directions
-	local angles = {-120, -90, -60, -30, 0, 30, 60, 90, 120}
-
-	for _, angleDeg in ipairs(angles) do
-		local angle = math.rad(angleDeg)
-		local direction = CFrame.fromAxisAngle(Vector3.new(0, 1, 0), angle) * self.Root.CFrame.LookVector
-
-		local rayResult = workspace:Raycast(
-			self.Root.Position + Vector3.new(0, 2, 0),
-			direction * rayDistance,
-			self.RayParams
-		)
-
-		if rayResult then
-			local hitDist = (rayResult.Position - self.Root.Position).Magnitude
-			local strength = math.pow((rayDistance - hitDist) / rayDistance, 2) * 2
-
-			local normal = rayResult.Normal
-			local pushDir = Vector3.new(normal.X, 0, normal.Z)
-			if pushDir.Magnitude > 0.1 then
-				pushDir = pushDir.Unit
-				avoidVector = avoidVector + pushDir * strength
-			end
-		end
-	end
-
-	return avoidVector
-end
-
--- =========================
--- HUNT MODE (PATHFINDING TO PLAYER)
+-- DIRECT CHASE (HUNT MODE)
 -- =========================
 function HeroAI:Hunt()
 	if not self.HuntTarget or not self.HuntTarget.Character then return end
@@ -189,7 +147,6 @@ function HeroAI:Hunt()
 
 	local dist = (self.Root.Position - root.Position).Magnitude
 
-	-- Kill player if close enough
 	if dist < 5 then
 		local hum = self.HuntTarget.Character:FindFirstChild("Humanoid")
 		if hum then hum.Health = 0 end
@@ -197,21 +154,8 @@ function HeroAI:Hunt()
 		return
 	end
 
-	-- Use A* pathfinding to reach player
-	local path = self:GetPath(root.Position)
-
-	if path then
-		self.CurrentPath = path
-	else
-		-- Fallback: direct movement with wall avoidance
-		local avoidVector = self:GetWallAvoidanceVector()
-		local targetPos = root.Position
-		if avoidVector.Magnitude > 0.1 then
-			targetPos = targetPos + avoidVector * 2
-		end
-		self.MoveTarget = targetPos
-		self:MoveTo(targetPos)
-	end
+	self.MoveTarget = root.Position
+	self:MoveTo(root.Position)
 end
 
 -- =========================
@@ -233,11 +177,6 @@ function HeroAI:Search()
 	if path then
 		self.CurrentPath = path
 	else
-		-- Apply wall avoidance
-		local avoidVector = self:GetWallAvoidanceVector()
-		if avoidVector.Magnitude > 0.1 then
-			targetPos = targetPos + avoidVector * 2
-		end
 		self:MoveTo(targetPos)
 	end
 end
